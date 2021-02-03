@@ -1,0 +1,128 @@
+---
+title: "ass4"
+author: "Tzu"
+date: "12/10/2019"
+output:
+  html_document:
+    df_print: paged
+    toc: true
+    toc_depth: 4
+    number_sections: true
+    toc_float: true
+  word_document: default
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+require("knitr")
+opts_knit$set(root.dir = "~/Desktop/NTU/02/Business Analytics/assignment/asd1904")
+```
+
+Library
+```{r,  message = FALSE, warning= FALSE}
+library(tidyverse)
+```
+
+# Q1
+*In a 1962 social experiment, 135 third- and fourth-year-old children from poverty-level families in Michigan were randomly assigned either to a treatment group receiving 2 years of preschool instruction or to a control group receiving no preschool. The participants were followed into their adult years. The following table show how many in each group were arrested for some crime by the time they were 19 years old.*
+
+![](/Users/chengtzuhsuan/Desktop/NTU/02/Business Analytics/assignment/asd1904/tmp.png)
+
+## (a) 
+*Is it possible to use these data to see whether preschool instruction can cause a lower rate of criminal arrest for some populations?*
+
+Yes.
+
+## (b) 
+*Is this a retrospective or a prospective study?*
+
+It's a Prospective study.
+
+## (c) 
+*Analyze the data to determine whether a preschool program like the one used can lead to lower levels of criminal activity; and, if so, by how much.*
+
+Create a dataframe
+```{r}
+y = c(21, 46, 35, 33)				# listed by row
+program = gl(2, 2, 4, c("Preschool", "Control"))		# row names
+arrested = gl(2, 1, 4, c("Yes", "No"))	# col names
+
+(q1 = xtabs(y~ program + arrested))
+```
+
+2-sample test for equality of proportions
+```{r}
+(q1.ptest = prop.test(q1))
+(p.i = q1.ptest$estimate)
+```
+
+Test for Equality of Two Population Odds
+```{r}
+# odds
+( q1.odds = q1.ptest$estimate/(1-q1.ptest$estimate) )
+
+# odds ratio
+( q1.phi = q1.odds[2]/q1.odds[1] )	
+
+# log-odds ratio
+log(q1.phi)				
+
+# SE for log estimated odds ratio
+## Setup
+nyes = sum(q1[, 1])
+n = sum(q1)
+pic = nyes/n
+n.byrow = apply(q1, 1, sum)
+
+## For testing equality
+( q1.se0 <- sqrt(sum(1/(pic*(1-pic)*n.byrow))) )
+
+# p-value
+1-pnorm(log(q1.phi)/q1.se0)	
+```
+
+Conclusion: p-value = 0.007917，拒絕虛無假設(H0: odds ratio = 1)，所以odds ratio是有顯著差異於1的。因odds ratio = 2.32，我們可以推論有上學前班的小朋友未來犯罪被逮的可能性小於沒有上學前班在統計上是顯著的，沒有上學前班的犯罪被逮的可能性約為有上學前班的2.32倍。
+
+
+# Q2
+*A marketing survey of car owners was presented in two ways. One way asked the customer whether he was satisfied with his car. The other way asked the customer whether he was dissatisfied. This table summarizes the results.*
+![](/Users/chengtzuhsuan/Desktop/NTU/02/Business Analytics/assignment/asd1904/tmp2.png)
+
+## (a) 
+*Quantify the amount of association between the type of question and the degree of satisfaction, using Chi-Squared Test.*
+
+Create the table
+```{r}
+q2 <- matrix(c(139, 128, 82, 69, 12, 20, 10, 23), nrow=4, byrow=TRUE)
+dimnames(q2) <- list(c("Very satisfied", "Somewhat satisfied", "Somewhat dissatisfied", "Very dissatisfied"),
+                     c("Satisfied", "Dissatisfied"))
+names(dimnames(q2)) <- c("Response", "Question")
+```
+
+Chi-Squared Test
+```{r}
+chisq.test(q2, correct=F)
+```
+
+The p-value is 0.03393, X-squared statistics =  8.6753 and degree of freedom = 3。p-value < 0.05, Chi-squared檢定的結果拒絕虛無假設，Question與Response是不獨立的。
+
+## (b) 
+*Combine the counts of very satisfied with somewhat satisfied, and very dissatisfied with somewhat dissatisfied, so that the table has only two rows rather than four. What happens to the degree of association?*
+
+Combine the data
+```{r}
+q2.b =  
+  tibble(sat.c = apply(q2[1:2,], 2, sum), 
+         dis.c = apply(q2[3:4,], 2, sum)) %>% 
+  t %>% as.data.frame() %>%
+  rename(Satisfied = V1,
+         Dissatisfied = V2)
+
+q2.b
+```
+
+Chi-squared Test
+```{r}
+chisq.test(q2.b, correct = F)
+```
+
+合併後的結果，X-squared statistics = 8.1443 比合併前的值小一點。p-value = 0.00432 < 0.05, Chi-squared檢定的結果為拒絕虛無假設，Question與Response是不獨立的，且顯著性比合併前強。
