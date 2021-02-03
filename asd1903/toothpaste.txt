@@ -1,0 +1,10 @@
+Week	StoreLocation	StoreType	Display	Sales
+1	U	GR	C	51
+2	U	DI	A	59
+3	U	DE	B	67
+4	S	GR	A	32
+5	S	DI	B	66
+6	S	DE	C	48
+7	R	GR	B	37
+8	R	DI	C	52
+9	R	DE	A	37
