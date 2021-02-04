@@ -1,0 +1,158 @@
+#' ---
+#' title: "Ass3"
+#' author: "Cheng"
+#' date: "11/12/2019"
+#' output:
+#'   html_document:
+#'     df_print: paged
+#'     toc: true
+#'     toc_depth: 4
+#'     number_sections: true
+#'     toc_float: true
+#'   word_document: default
+#' ---
+#' 
+## ----setup, include=FALSE, echo=FALSE------------------------------------
+require("knitr")
+opts_knit$set(root.dir = "~/Desktop/NTU/02/Business Analytics/assignment/asd1903")
+
+#' 
+#' # Q1
+#' *You are trying to determine the effects of three packaging displays (A, B, and C) on sales of toothpaste. The number of cases toothpaste sold for 9 consecutive weeks is listed below. The type of store (GR = grocery, DI = discount, and DE = department store) and store location (U = urban, S = suburban, and R = rural) are also listed.*
+#' 
+#' ## (a) 
+#' *Run a multiple regression to determine how the type of store, display, and store location influence sales. Which potential explanatory variables should be included in the equation? Explain your rationale for including and excluding variables. Take a look of data*
+#' 
+#' Take a look of the data
+## ------------------------------------------------------------------------
+df1 = read.table("toothpaste.txt", header = TRUE)
+head(df1)
+
+#' 
+## ------------------------------------------------------------------------
+fit1 = lm(Sales ~ StoreLocation + StoreType + Display, data = df1)
+summary(fit1)
+
+#' 
+#' All dummy variables are quite siginificant when the level equals to 0.08. I think we should include all varialbes first.
+#' 
+#' ## (b)
+#' *What type of store, store location, and display appears to maximize sales?*
+#' 
+#' According to the table of fit1 model:
+#' When Location = Urban, StoreType = Discount, Display = B appear to maximizae slaes.
+#' 
+#' ## (c)
+#' *For the type of store in (b), estimate the probability that 80 or more toothpaste will be sold during a week.*
+#' 
+## ------------------------------------------------------------------------
+y_pred <- predict(fit1, newdata=data.frame(StoreLocation="U",StoreType="DI",Display="B"))
+1-pnorm(80, y_pred, summary(fit1)$sigma)
+
+#' The probabiltiy that 80 or more toothpaste would be sold during a week is 0.042.
+#' 
+#' ## (d)
+#' *Does multicollinearity seem to be a problem?*
+## ------------------------------------------------------------------------
+pairs(df1)
+
+#' 
+## ------------------------------------------------------------------------
+library(car)
+vif(fit1)
+
+#' According to the scatter plot and VIF vlaues, which are all smaller than 10, there's no multicollinearity problems. 
+#' 
+#' # Q2
+#' *A farmer wants to conduct an experiment to compare eight varieties of oats. The farmer knows that the growing area is heterogeneous so he decided to group the area into five blocks. He randomly plants each variety of oats in each block and records the yields accordingly. Dataset oatvar is the experiment result.*
+#' 
+#' ## (a)
+#' *What kind of experiment is this farmer using?*
+#' Randomized Block Design.
+#' 
+#' ## (b)
+#' *Is there any interaction effect between the variety of oats and the growing area block?*
+## ------------------------------------------------------------------------
+df2 = read.table("oatvar.txt", header = T)
+head(df2)
+
+#' 
+## ------------------------------------------------------------------------
+par(mfrow=c(2,2))
+stripchart(yield ~ variety, data = df2, xlab="yield",ylab="variety") 
+stripchart(yield ~ block, data = df2, xlab="yield",ylab="block") 
+
+interaction.plot(df2$variety, df2$block, df2$yield) 
+interaction.plot(df2$block, df2$variety, df2$yield)
+
+#' 
+#' According to the plots, in both cases the lines are not parallel, indicating interaction.
+#' 
+#' ## (c)
+#' *Conduct a hypothesis test to determine whether the yield of oats is affected by different varieties at 5% significance level.*
+## ------------------------------------------------------------------------
+df2$variety = as.factor(df2$variety) 
+fit2 <- lm(yield ~ block + variety, data = df2) 
+summary(fit2)
+
+#' 
+#' H0:the yield of oats is not affected by different varieties
+## ------------------------------------------------------------------------
+anova(fit2)
+
+#' 
+#' The p-value = 1.804e-05 is smaller than 0.05, so we should reject the null hypothesis, which means the yield of oats is affected by different varieties.
+#' 
+#' ## (d)
+#' *Check the diagnostics. Is there any unusual findings?*
+#' Run the diagnostics
+## ------------------------------------------------------------------------
+# Residual plots & QQ-plots
+plot(fit2)
+
+#' Both residuals plots and qq plots look fine.
+#' 
+#' ## (e)
+#' *Is it necessary to perform multiple comparisons? If yes, carry out the comparison following the structure and procedure presented in the lecture.*
+#' Yes. Below shows the multiple comparisons:
+## ------------------------------------------------------------------------
+tu <- TukeyHSD(aov(yield ~ block + variety, df2), "variety") 
+par(mfrow=c(1,1))
+plot(tu, las=2)
+
+#' 
+#' # Q3
+#' *The following experiment (fabric data file) was designed to found out to what extent a particular type of fabric gave homogeneous results over its surface for a standard wear test. In a single run the test machine could accommodate four samples of fabric, at positions 1, 2, 3, and 4. On a large sheet of the fabric four areas A, B, C, and D were marked out at random at different places over the surface. From each area 4 samples were taken, and the 16 samples thus obtained were compared in the machine with the following results, given in milligrams of wear.*
+#' 
+#' ## (a)
+#' *What kind of experiment is there using?*
+#' Latin Square Design.
+#' 
+#' ## (b)
+#' *Write down the linear model equation of this experiment design?*
+## ------------------------------------------------------------------------
+df3 = read.table("fabric.txt", header = T)
+df3
+
+#' 
+#' Linear model equation:
+#' 
+#' $y_{ijl} = \mu + \alpha_{i} + \beta_{j} + \tau_{l} + \varepsilon_{ijl}$
+#' 
+#' where i,j,l = 1,.,k (k=4)
+#' 
+#' ## (c)
+#' *Conduct an appropriate analysis for this experiment and what is the conclusion?*
+#' LM model
+## ------------------------------------------------------------------------
+fit3 = lm(result ~ area + factor(position) + factor(run), data = df3)
+
+## ------------------------------------------------------------------------
+drop1(fit3, test="F")
+
+#' 
+## ------------------------------------------------------------------------
+anova(fit3)
+
+#' 
+#' According to the anova table, we can say that position and area would affect the results.

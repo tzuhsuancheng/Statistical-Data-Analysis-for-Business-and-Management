@@ -1,0 +1,211 @@
+#' ---
+#' title: "Ass2"
+#' author: "Cheng"
+#' date: "10/20/2019"
+#' output:
+#'   html_document:
+#'     df_print: paged
+#'     toc: true
+#'     toc_depth: 4
+#'     number_sections: true
+#'     toc_float: true
+#'   word_document: default
+#' ---
+#' 
+## ----setup, include=FALSE, echo=FALSE------------------------------------
+require("knitr")
+opts_knit$set(root.dir = "~/Desktop/NTU/02/Business Analytics/assignment/asd1902")
+
+#' 
+#' # Q1
+#' *The manager of a commuter rail transportation system was recently asked by her governing board to determine which factors have a significant impact on the demand for rides in the large city served by the transportation network. The system manager has collected data on variables thought to be possibly related to the number of weekly riders on the city’s rail system. The file railriders.txt contains these data.*
+#' 
+#' Take a look of data
+## ------------------------------------------------------------------------
+rail = read.table("railriders.txt", header = TRUE)
+head(rail)
+
+#' 
+#' ## (a) 
+#' *(Answer this question before using R.) What are the expected signs of the coefficients of the explanatory variables in this multiple regression model? Provide reasoning for each of your stated expectations.*
+#' 
+#' 我預期`Price_per_Ride`, `Income` 與 `Weekly_Riders`為負向的關係。以收入來說，收入愈高預期會傾向開自己的私人車而會減少搭乘交通工具的機會。大眾運輸的費用增加會減少搭乘的機會。
+#' 
+#' `Parking_Rate`、`Population`與`Weekly_Riders`為正向關係。停車費越高會減少開車的機會轉而搭乘交通工具。人口越多基數越大，搭乘大眾工具的數量自然會提升。
+#' 
+#' ## (b) 
+#' *Formulate and estimate a multiple regression model using R with the given data. Perform a test of significance for each of the model’s regression coefficients. Interpret each of the estimated regression coefficients. Are the signs of the estimated regression coefficients consistent with your expectation as stated in (a)?*
+#' 
+## ------------------------------------------------------------------------
+fit1 = lm(Weekly_Riders ~ . -Year, data = rail)
+summary(fit1)
+
+#' 
+#' 如果顯著水準為0.05，fit1模型的所有解釋變數得據P-value都<0.05, 都是顯著的。變數coefficient 方向的估計結果與預期相符合。
+#' 
+#' 根據模型估計的結果我們可以推論以下關係：
+#' 
+#' 1. 當其他變數固定的情況下，Price_Per_Ride每上升一單位，Weekly_Riders下降大約167個單位。
+#' 2. 當其他變數固定的情況下，Population每上升一單位，Weekly_Riders也上升0.62個單位。
+#' 3. 當其他變數固定的情況下，Income每上升一單位，Weekly_Riders下降0.047個單位。
+#' 4. 當其他變數固定的情況下，Parking_Rate每上升一單位，Weekly_Riders上升194個單位。
+#' 
+#' ## (c) 
+#' *What proportion of the total variation in the number of weekly riders is not explained by this multiple regression model?*
+## ------------------------------------------------------------------------
+(1 - summary(fit1)$r.squared)
+
+#' 
+#' # Q2
+#' *An antique collector believes that the price received for a particular item increases with its age and with the number of bidders. The file antique.txt contains data for 32 recently auctioned comparable items.*
+#' 
+#' ## (a) 
+#' *Formulate and estimate a multiple regression model with R. Interpret each of the estimated regression coefficients. Is the antique collector correct in believing that the price received for the item increases with its age and with the number of bidders?*
+#' 
+#' Data
+## ------------------------------------------------------------------------
+ant = read.table("antique.txt", header = TRUE)
+head(ant)
+
+#' 
+#' 
+#' Build  multiple regression model：
+## ------------------------------------------------------------------------
+fit2 = lm(data = ant, Auction_Price ~ .)
+summary(fit2)
+
+#' 
+#' 根據lm跑的結果，我們可以得到以下估計的模型：
+#' 
+#' $AuctionPrice = -1336.7721 + 12.7362 * Age of Item + 85.8151 * Number Bidders$
+#' 
+#' 1. 當Number Bidders不變，古董每增加一歲，價格會增加$12.7362單位的價錢
+#' 2. 當Age of Item不變，Number Bidders每增加一人，價格會增加$85.8單位的價錢
+#' 
+#' `Age_of_Item`跟`Number_Bidders`的pvalue都很小，都很顯著。因此收藏家可以相信Bidders的數量跟古董的年齡對價錢是有解釋能力的。
+#' 
+#' ## (b) 
+#' *Interpret the residual standard error and the coefficient of determination.*
+#' 
+#' 1. The residual standard error = 133.1
+#' 2. Coefficient of determination = 0.8927
+#' 
+#' 也就是說，根據$R^2$，這個模型有89.27%的解釋能力，模型fit的還不錯。Residual standard error 說明了模型的預測能力，當我們要預測一個新的古董的售價時的誤差價格約在$133.1以內。
+#' 
+#' ## (c)
+#' *Suppose the antique collector believes that the rate of increase of the auction price with the age of the item will be driven upward by a large number of bidders. How would you revise the multiple regression model?*
+#' 
+#' Add interaction term:
+## ------------------------------------------------------------------------
+fit3 = lm(data = ant, Auction_Price ~ Age_of_Item * Number_Bidders)
+summary(fit3)
+
+#' 
+#' ## (d) 
+#' *Interpret each of the estimated coefficients in the revised model.*
+#' 
+#' 根據模型跑的結果：
+#' 
+#' 1. Number_Bidders不變，當Age_of_Item每上升一個單位，價格會上升(0.8733+1.2979 * Number_Bidders)，也就是說價格會再根據Bidder的數量而有調整。
+#' 2. Age_of_Item不變，當Number_Bidders每上升一個單位，價格會有(-93.4099 + 1.2979 * Age_of_Item)的變動，也就是說價格會再根據古董的年齡而有調整。
+#' 
+#' ## (e) 
+#' *Which model fits the given data better? Give your reasons.*
+#' 
+#' 加入Interaction term的 fit3模型表現得比較好。可以發現fit3模型的$R^2$ 上升(95.44%)、$\sigma$下降(88.370)，模型的解釋力、預測力都更好。
+#' 
+#' # Q3
+#' *When car dealers lease a car, how do they decide what to charge? One answer, if you’ve got a lot of unpopular cars to move, is to charge whatever it takes to get the cars off the lot. A different answer considers the so-called residual value of the car at the end of the lease. The residual value of a leased car is the value of this car in the used-car market, also known as the previously owned car market.*
+#' 
+#' *How should we estimate the residual value of a car? The residual value depends on how much the car was worth originally, such as the manufacturer’s list price. Let’s take this off the table by limiting our attention to a particular type of car. Let’s also assume that we are looking at cars that have not been damaged in an accident.*
+#' 
+#' *What else matters? Certainly the age of the car affects its residual value. Customers expect to pay less for older cars, on average. Older cars have smaller residual value. The term of the lease, say 2 or 3 years, has to cover the cost of the ageing of the car. Another factor that affects the residual value is the type of use. An older car that is in the great condition might be worth more than a newer car that has been heavily driven. It seems as though the cost of a lease ought to take both duration and use into account.*
+#' 
+#' ## (a) 
+#' *Why does a manufacturer need to estimate the residual value of a leased car in order to determine annual payments on the lease?*
+#' 
+#' 如果沒有先估算車子的residual value，那很有可能租出去的價格太低導致車子退回時可能無法平衡車子實際耗損。
+#' 
+#' Data
+## ------------------------------------------------------------------------
+bmw = read.table('used_bmw.txt', header = TRUE, sep = "\t")
+
+#' 
+#' ## (b) 
+#' *Check scatterplots of the variables. Do the relationships appear straight enough to permit using multiple linear regression with these variables?*
+## ------------------------------------------------------------------------
+pairs(bmw[, 1:3])
+
+#' 
+#' 1. `Price` 跟 `Age` 有隨著車齡增長而價格降低相關性
+#' 2. `Price` 跟 `Mileage` 呈現負相關的趨勢
+#' 3. `Mileage` 跟 `Age` 兩個解釋變數有一點正相關的關係，可能會造成共線性的問題
+#' 4. 有一些outliers，但不是很嚴重。
+#' 
+#' 根據上述變數間的關係，判定為可以建多元回歸模型。
+#' 
+#' ## (c) 
+#' *Fit the appropriate multiple linear regression model.*
+#' 
+#' Model fit4:
+## ------------------------------------------------------------------------
+fit4 = lm(data = bmw, Price ~ Age + Mileage)
+summary(fit4)
+
+#' 
+#' If add interaction term
+#' Model fit5
+## ------------------------------------------------------------------------
+fit5 = lm(data = bmw, Price ~ Age * Mileage)
+summary(fit5)
+
+#' 
+## ------------------------------------------------------------------------
+anova(fit4, fit5)
+
+#' 
+#' 我會選擇採用Model fit4。
+#' 
+#' 
+#' ## (d) 
+#' *Does this model meet the assumptions for multiple linear models?*
+## ------------------------------------------------------------------------
+plot(fit4)
+
+#' 
+#' fit4模型的Analysis of Risiduals:
+#' 
+#' 1. Risiduals大致符合常態分佈、variance差異也很小。
+#' 2. 除了#17的樣本比較不正常之外，大致都還符合3+1 Assumptions.
+#' 
+#' ## (e) 
+#' *Build confidence intervals for the partial effects of age and mileage.*
+## ------------------------------------------------------------------------
+confint(fit4)
+
+#' 
+#' 95% 的信賴區間為：
+#' 
+#' 1. Age: (-2423, -1284)
+#' 2. Mileage: (-0.1708, -0.077)
+#' 
+#' ## (f) 
+#' *Summarize the results of your model. Recommend terms for leases that cover the costs of ageing and mileage.*
+## ------------------------------------------------------------------------
+summary(fit4)$coefficient
+
+#' 
+#' Model: 
+#' 
+#' $Price = 40323 -1854 * Age - 0.124 * Mileage$
+#' 
+#' 我們可以設定車子年齡增加的成本為2000, 每一里程數的成本為0.17. 這樣子的設定平均來說有95%的可能性可以覆蓋真實的成本～
+#' 
+#' ## (g) 
+#' *Do you have any caveats that should be pointed out with your recommended terms? For example, are there any evident lurking variables?*
+#' 
+## ------------------------------------------------------------------------
+summary(fit4)$r.squared
+
+#' 
+#' 首先我們可以注意到模型fit4的$R^2$僅有51%的解釋能力，代表還有將近一半的資訊是沒有被這個模型捕捉到的。因此我們可以透過增加變數的方式來幫助模型增加解釋能力，像是可以收集一些車子外觀、性能實測等特徵數據可能會增加車子價值的變數。
