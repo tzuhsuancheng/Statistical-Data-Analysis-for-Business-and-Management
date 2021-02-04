@@ -3,13 +3,13 @@ title: "Assignment1"
 author: "Cheng"
 date: "9/30/2019"
 output:
-  word_document: default
   html_document:
     df_print: paged
     number_sections: yes
     toc: yes
     toc_depth: 4
     toc_float: yes
+  word_document: default
   pdf_document:
     toc: yes
     toc_depth: '4'
