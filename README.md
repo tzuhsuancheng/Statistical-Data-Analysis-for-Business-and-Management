@@ -3,6 +3,8 @@
 - NTU 2019 Fall Statistical Data Analysis for Business and Management
 - Course Information： [syllabus](https://github.com/tzuhsuancheng/Statistical-Data-Analysis-for-Business-and-Management/blob/main/108-1_Business-Analytics_Syllabus_v1.pdf) 
 
+## Final Project
+[Predicting AsiaYo's customer retention for improving marketing communication](https://github.com/tzuhsuancheng/retention-analysis)
 ## Assignment 1
 Exploratory Data Analysis, Simple Regression
 
